@@ -27,6 +27,13 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production'
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
+# Stripe Configuration
+STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
+
+# Payment Plans
+SUBSCRIPTION_PRICE = 4.99  # Monthly subscription for transporters
+COMMISSION_RATE = 0.10  # 10% commission on transactions
+
 security = HTTPBearer()
 
 # Create the main app without a prefix
