@@ -178,6 +178,44 @@ const TransporterDashboard = ({ user, token, onLogout }) => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Subscription Banner */}
+        {subscription && !subscription.has_subscription && (
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white mb-8">
+            <CardContent className="flex items-center justify-between py-6">
+              <div className="flex items-center gap-4">
+                <Crown className="w-10 h-10" />
+                <div>
+                  <h3 className="text-xl font-bold">¡Suscríbete para hacer ofertas!</h3>
+                  <p className="text-amber-100">Por solo $4.99/mes accede a todas las solicitudes de transporte</p>
+                </div>
+              </div>
+              <Button 
+                onClick={handleSubscribe}
+                disabled={loadingSubscription}
+                className="bg-white text-amber-600 hover:bg-amber-50 font-bold px-6 rounded-full"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                {loadingSubscription ? 'Procesando...' : 'Suscribirse'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {subscription?.has_subscription && (
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white mb-8">
+            <CardContent className="flex items-center justify-between py-4">
+              <div className="flex items-center gap-4">
+                <Crown className="w-8 h-8" />
+                <div>
+                  <h3 className="text-lg font-bold">Suscripción Activa</h3>
+                  <p className="text-emerald-100">{subscription.days_remaining} días restantes</p>
+                </div>
+              </div>
+              <Badge className="bg-white/20 text-white border-0 text-sm">Premium</Badge>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats */}
         {stats && (
           <div className="grid md:grid-cols-3 gap-6 mb-8">
