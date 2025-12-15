@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 class TransportMarketplaceAPITester:
-    def __init__(self, base_url="https://deliverlink-2.preview.emergentagent.com"):
+    def __init__(self, base_url="https://cargoconnect-28.preview.emergentagent.com"):
         self.base_url = base_url
         self.cliente_token = None
         self.transportista_token = None
