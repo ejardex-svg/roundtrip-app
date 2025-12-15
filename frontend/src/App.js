@@ -71,6 +71,12 @@ function App() {
           <Route path="/profile" element={
             user ? <Profile user={user} token={token} onLogout={handleLogout} onUserUpdate={setUser} /> : <Navigate to="/" />
           } />
+          <Route path="/payments/success" element={
+            user ? <PaymentSuccess user={user} token={token} /> : <Navigate to="/" />
+          } />
+          <Route path="/payments/cancel" element={
+            user ? <PaymentCancel user={user} /> : <Navigate to="/" />
+          } />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
