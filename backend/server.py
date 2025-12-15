@@ -123,6 +123,30 @@ class Rating(BaseModel):
     comentario: str
     created_at: str
 
+# ============ PAYMENT MODELS ============
+
+class SubscriptionRequest(BaseModel):
+    origin_url: str
+
+class CommissionPaymentRequest(BaseModel):
+    origin_url: str
+    solicitud_id: str
+
+class PaymentTransaction(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    user_email: str
+    session_id: str
+    amount: float
+    currency: str
+    payment_type: str  # subscription, commission
+    payment_method: str  # stripe, paypal
+    status: str  # pending, paid, failed, expired
+    metadata: Dict[str, str]
+    created_at: str
+    updated_at: str
+
 # ============ AUTH UTILITIES ============
 
 def hash_password(password: str) -> str:
