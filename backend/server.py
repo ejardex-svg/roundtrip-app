@@ -500,6 +500,11 @@ async def get_stats(current_user: User = Depends(get_current_user)):
     
     return stats
 
+# Health check endpoint for Kubernetes
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
