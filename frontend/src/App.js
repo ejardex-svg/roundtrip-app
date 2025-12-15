@@ -6,6 +6,8 @@ import ClientDashboard from "./pages/ClientDashboard";
 import TransporterDashboard from "./pages/TransporterDashboard";
 import RequestDetail from "./pages/RequestDetail";
 import Profile from "./pages/Profile";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
