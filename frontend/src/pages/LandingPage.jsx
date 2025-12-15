@@ -106,7 +106,7 @@ const LandingPage = ({ onLogin }) => {
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <Truck className="w-7 h-7 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">TransportLink</span>
+              <span className="text-2xl font-bold text-gray-900">Go to go</span>
             </div>
             {!showAuth && (
               <Button 
@@ -150,7 +150,7 @@ const LandingPage = ({ onLogin }) => {
             {showAuth ? (
               <Card className="shadow-2xl border-0 rounded-3xl" data-testid="auth-card">
                 <CardHeader>
-                  <CardTitle className="text-2xl text-center">Únete a TransportLink</CardTitle>
+                  <CardTitle className="text-2xl text-center">Únete a Go to go</CardTitle>
                   <CardDescription className="text-center">Crea una cuenta o inicia sesión</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -370,7 +370,7 @@ const LandingPage = ({ onLogin }) => {
             ¿Listo para optimizar tus transportes?
           </h2>
           <p className="text-base text-gray-600 mb-8 max-w-2xl mx-auto">
-            Únete a miles de clientes y transportistas que ya confían en TransportLink para sus necesidades logísticas.
+            Únete a miles de clientes y transportistas que ya confían en Go to go para sus necesidades logísticas.
           </p>
           <Button 
             data-testid="cta-button"
@@ -391,9 +391,9 @@ const LandingPage = ({ onLogin }) => {
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
                 <Truck className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">TransportLink</span>
+              <span className="text-xl font-bold">Go to go</span>
             </div>
-            <p className="text-sm text-gray-400">© 2025 TransportLink. Todos los derechos reservados.</p>
+            <p className="text-sm text-gray-400">© 2025 Go to go. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
