@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
-import { Truck, MapPin, Package, TrendingUp, Clock, User, LogOut } from 'lucide-react';
+import { Truck, MapPin, Package, TrendingUp, Clock, User, LogOut, CreditCard, Crown } from 'lucide-react';
 
 const TransporterDashboard = ({ user, token, onLogout }) => {
   const navigate = useNavigate();
@@ -12,12 +12,56 @@ const TransporterDashboard = ({ user, token, onLogout }) => {
   const [myOffers, setMyOffers] = useState([]);
   const [stats, setStats] = useState(null);
   const [activeTab, setActiveTab] = useState('disponibles');
+  const [subscription, setSubscription] = useState(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
 
   useEffect(() => {
     fetchAvailableRequests();
     fetchMyOffers();
     fetchStats();
+    fetchSubscriptionStatus();
   }, []);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/subscription/status`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSubscription(data);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    setLoadingSubscription(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/payments/stripe/subscription`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          origin_url: window.location.origin
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = data.url;
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Error al iniciar suscripción');
+      }
+    } catch (error) {
+      toast.error('Error al conectar con el servidor');
+    }
+    setLoadingSubscription(false);
+  };
 
   const fetchAvailableRequests = async () => {
     try {
