@@ -156,7 +156,7 @@ const LandingPage = ({ onLogin }) => {
             {showAuth ? (
               <Card className="shadow-2xl border-0 rounded-3xl" data-testid="auth-card">
                 <CardHeader>
-                  <CardTitle className="text-2xl text-center">Únete a Go to go</CardTitle>
+                  <CardTitle className="text-2xl text-center">Únete a Round Trip</CardTitle>
                   <CardDescription className="text-center">Crea una cuenta o inicia sesión</CardDescription>
                 </CardHeader>
                 <CardContent>
