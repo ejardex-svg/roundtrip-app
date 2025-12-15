@@ -103,10 +103,16 @@ const LandingPage = ({ onLogin }) => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="flex justify-between items-center mb-16">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <Truck className="w-7 h-7 text-white" />
+              <div className="relative w-12 h-12 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <RefreshCw className="w-6 h-6 text-white" strokeWidth={2.5} />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full shadow-md"></div>
               </div>
-              <span className="text-2xl font-bold text-gray-900">Go to go</span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent" style={{fontFamily: "'Playfair Display', Georgia, serif"}}>
+                  ROUND TRIP
+                </span>
+                <span className="text-[10px] tracking-[0.3em] text-gray-500 font-medium uppercase">Conectamos tu carga</span>
+              </div>
             </div>
             {!showAuth && (
               <Button 
