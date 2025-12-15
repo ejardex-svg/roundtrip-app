@@ -376,7 +376,7 @@ const LandingPage = ({ onLogin }) => {
             ¿Listo para optimizar tus transportes?
           </h2>
           <p className="text-base text-gray-600 mb-8 max-w-2xl mx-auto">
-            Únete a miles de clientes y transportistas que ya confían en Go to go para sus necesidades logísticas.
+            Únete a miles de clientes y transportistas que ya confían en Round Trip para sus necesidades logísticas.
           </p>
           <Button 
             data-testid="cta-button"
