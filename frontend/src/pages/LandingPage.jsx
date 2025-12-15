@@ -394,12 +394,13 @@ const LandingPage = ({ onLogin }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                <Truck className="w-5 h-5 text-white" />
+              <div className="relative w-10 h-10 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <RefreshCw className="w-5 h-5 text-white" strokeWidth={2.5} />
+                <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-400 rounded-full"></div>
               </div>
-              <span className="text-xl font-bold">Go to go</span>
+              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent" style={{fontFamily: "'Playfair Display', Georgia, serif"}}>ROUND TRIP</span>
             </div>
-            <p className="text-sm text-gray-400">© 2025 Go to go. Todos los derechos reservados.</p>
+            <p className="text-sm text-gray-400">© 2025 Round Trip. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
