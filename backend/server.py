@@ -605,14 +605,20 @@ async def create_rating(rating_data: RatingCreate, current_user: User = Depends(
     
     await db.ratings.insert_one(rating_doc)
     
-    # Update user's average rating
-    all_ratings = await db.ratings.find({"to_user_id": rating_data.to_user_id}).to_list(1000)
-    avg_rating = sum(r["rating"] for r in all_ratings) / len(all_ratings)
+    # Update user's average rating using aggregation
+    pipeline = [
+        {"$match": {"to_user_id": rating_data.to_user_id}},
+        {"$group": {"_id": None, "avg_rating": {"$avg": "$rating"}, "count": {"$sum": 1}}}
+    ]
+    result = await db.ratings.aggregate(pipeline).to_list(1)
     
-    await db.users.update_one(
-        {"id": rating_data.to_user_id},
-        {"$set": {"rating": round(avg_rating, 2), "num_ratings": len(all_ratings)}}
-    )
+    if result:
+        avg_rating = result[0]["avg_rating"]
+        count = result[0]["count"]
+        await db.users.update_one(
+            {"id": rating_data.to_user_id},
+            {"$set": {"rating": round(avg_rating, 2), "num_ratings": count}}
+        )
     
     return Rating(**{k: v for k, v in rating_doc.items() if k != "_id"})
 
@@ -621,7 +627,7 @@ async def get_user_ratings(user_id: str):
     ratings = await db.ratings.find(
         {"to_user_id": user_id},
         {"_id": 0}
-    ).sort("created_at", -1).to_list(1000)
+    ).sort("created_at", -1).limit(50).to_list(50)
     return ratings
 
 # ============ DASHBOARD ROUTES ============
