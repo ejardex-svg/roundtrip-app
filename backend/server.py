@@ -1235,6 +1235,179 @@ async def update_profile(
     updated_user = await db.users.find_one({"id": current_user.id}, {"_id": 0, "hashed_password": 0})
     return updated_user
 
+# ============ ADMIN ROUTES ============
+
+@api_router.get("/admin/stats")
+async def get_admin_stats(admin: User = Depends(get_admin_user)):
+    """Get admin dashboard statistics"""
+    total_users = await db.users.count_documents({})
+    total_requests = await db.transport_requests.count_documents({})
+    pending_identity = await db.identity_verifications.count_documents({"status": "pending"})
+    pending_vehicle = await db.vehicle_verifications.count_documents({"status": "pending"})
+    total_transactions = await db.payment_transactions.count_documents({"status": "paid"})
+    
+    return {
+        "total_users": total_users,
+        "total_requests": total_requests,
+        "pending_identity_verifications": pending_identity,
+        "pending_vehicle_verifications": pending_vehicle,
+        "total_paid_transactions": total_transactions
+    }
+
+@api_router.get("/admin/verifications/identity")
+async def get_identity_verifications(status: Optional[str] = "pending", admin: User = Depends(get_admin_user)):
+    """Get all identity verifications (admin only)"""
+    query = {}
+    if status:
+        query["status"] = status
+    
+    verifications = await db.identity_verifications.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Add user info to each verification
+    for v in verifications:
+        user = await db.users.find_one({"id": v["user_id"]}, {"_id": 0, "hashed_password": 0})
+        v["user"] = user
+    
+    return verifications
+
+@api_router.get("/admin/verifications/vehicle")
+async def get_vehicle_verifications(status: Optional[str] = "pending", admin: User = Depends(get_admin_user)):
+    """Get all vehicle verifications (admin only)"""
+    query = {}
+    if status:
+        query["status"] = status
+    
+    verifications = await db.vehicle_verifications.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Add user info to each verification
+    for v in verifications:
+        user = await db.users.find_one({"id": v["user_id"]}, {"_id": 0, "hashed_password": 0})
+        v["user"] = user
+    
+    return verifications
+
+@api_router.patch("/admin/verifications/identity/{verification_id}")
+async def update_identity_verification(
+    verification_id: str,
+    status: str,
+    admin_notes: Optional[str] = None,
+    admin: User = Depends(get_admin_user)
+):
+    """Approve or reject identity verification (admin only)"""
+    if status not in ["approved", "rejected"]:
+        raise HTTPException(status_code=400, detail="Status debe ser 'approved' o 'rejected'")
+    
+    verification = await db.identity_verifications.find_one({"id": verification_id})
+    if not verification:
+        raise HTTPException(status_code=404, detail="Verificación no encontrada")
+    
+    await db.identity_verifications.update_one(
+        {"id": verification_id},
+        {"$set": {
+            "status": status,
+            "admin_notes": admin_notes,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "reviewed_by": admin.id
+        }}
+    )
+    
+    # Update user verification status
+    await db.users.update_one(
+        {"id": verification["user_id"]},
+        {"$set": {"identity_verification_status": status}}
+    )
+    
+    # Create notification for user
+    notification_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": verification["user_id"],
+        "tipo": "verification",
+        "titulo": "Verificación de Identidad " + ("Aprobada ✓" if status == "approved" else "Rechazada"),
+        "mensaje": admin_notes if admin_notes else ("Tu identidad ha sido verificada correctamente." if status == "approved" else "Tu verificación fue rechazada. Por favor, intenta de nuevo."),
+        "link": "/profile",
+        "leida": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification_doc)
+    
+    return {"message": f"Verificación {status}", "verification_id": verification_id}
+
+@api_router.patch("/admin/verifications/vehicle/{verification_id}")
+async def update_vehicle_verification(
+    verification_id: str,
+    status: str,
+    admin_notes: Optional[str] = None,
+    admin: User = Depends(get_admin_user)
+):
+    """Approve or reject vehicle verification (admin only)"""
+    if status not in ["approved", "rejected"]:
+        raise HTTPException(status_code=400, detail="Status debe ser 'approved' o 'rejected'")
+    
+    verification = await db.vehicle_verifications.find_one({"id": verification_id})
+    if not verification:
+        raise HTTPException(status_code=404, detail="Verificación no encontrada")
+    
+    await db.vehicle_verifications.update_one(
+        {"id": verification_id},
+        {"$set": {
+            "status": status,
+            "admin_notes": admin_notes,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "reviewed_by": admin.id
+        }}
+    )
+    
+    # Update user vehicle verification status
+    if status == "approved":
+        await db.users.update_one(
+            {"id": verification["user_id"]},
+            {"$set": {"has_verified_vehicle": True}}
+        )
+    
+    # Create notification for user
+    notification_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": verification["user_id"],
+        "tipo": "verification",
+        "titulo": f"Verificación de Vehículo ({verification['matricula']}) " + ("Aprobada ✓" if status == "approved" else "Rechazada"),
+        "mensaje": admin_notes if admin_notes else ("Tu vehículo ha sido verificado correctamente." if status == "approved" else "La verificación de tu vehículo fue rechazada. Por favor, intenta de nuevo."),
+        "link": "/profile",
+        "leida": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification_doc)
+    
+    return {"message": f"Verificación {status}", "verification_id": verification_id}
+
+@api_router.get("/admin/users")
+async def get_all_users(admin: User = Depends(get_admin_user)):
+    """Get all users (admin only)"""
+    users = await db.users.find(
+        {},
+        {"_id": 0, "hashed_password": 0}
+    ).sort("created_at", -1).to_list(500)
+    return users
+
+@api_router.patch("/admin/users/{user_id}/role")
+async def update_user_role(user_id: str, roles: List[str], admin: User = Depends(get_admin_user)):
+    """Update user roles (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"roles": roles}}
+    )
+    
+    return {"message": "Roles actualizados", "user_id": user_id, "roles": roles}
+
 # Health check endpoint for Kubernetes
 @app.get("/health")
 async def health_check():
