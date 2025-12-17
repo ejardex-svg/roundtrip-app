@@ -224,7 +224,7 @@ const ClientDashboard = ({ user, token, onLogout }) => {
                 Nueva Solicitud
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Crear Solicitud de Transporte</DialogTitle>
                 <DialogDescription>Completa los detalles de tu solicitud</DialogDescription>
@@ -252,29 +252,20 @@ const ClientDashboard = ({ user, token, onLogout }) => {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="origen">Origen</Label>
-                    <Input
-                      id="origen"
-                      data-testid="origen-input"
-                      placeholder="Madrid"
-                      value={formData.origen}
-                      onChange={(e) => setFormData({ ...formData, origen: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="destino">Destino</Label>
-                    <Input
-                      id="destino"
-                      data-testid="destino-input"
-                      placeholder="Barcelona"
-                      value={formData.destino}
-                      onChange={(e) => setFormData({ ...formData, destino: e.target.value })}
-                      required
-                    />
-                  </div>
+                
+                {/* Location Picker with Map */}
+                <div className="border rounded-xl p-4 bg-gray-50">
+                  <Label className="flex items-center gap-2 mb-4">
+                    <Route className="w-4 h-4 text-emerald-500" />
+                    Seleccionar Ruta
+                  </Label>
+                  <LocationPicker
+                    initialOrigin={formData.origen}
+                    initialDestination={formData.destino}
+                    onOriginChange={(value) => setFormData({ ...formData, origen: value })}
+                    onDestinationChange={(value) => setFormData({ ...formData, destino: value })}
+                    onRouteInfoChange={setRouteInfo}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="descripcion">Descripción</Label>
