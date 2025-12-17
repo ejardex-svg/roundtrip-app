@@ -51,7 +51,7 @@ class UserRegister(BaseModel):
     password: str
     nombre: str
     telefono: str
-    roles: List[str]  # ["cliente", "transportista"]
+    roles: List[str]  # ["cliente", "transportista", "admin"]
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -67,6 +67,13 @@ class User(BaseModel):
     rating: float = 0.0
     num_ratings: int = 0
     created_at: str
+
+# Admin check dependency
+async def get_admin_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    user = await get_current_user(credentials)
+    if "admin" not in user.roles:
+        raise HTTPException(status_code=403, detail="Se requiere rol de administrador")
+    return user
 
 class TransportRequestCreate(BaseModel):
     titulo: str
