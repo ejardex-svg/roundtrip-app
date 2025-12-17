@@ -78,6 +78,9 @@ function App() {
           <Route path="/payments/cancel" element={
             user ? <PaymentCancel user={user} /> : <Navigate to="/" />
           } />
+          <Route path="/admin" element={
+            user && user.roles.includes('admin') ? <AdminDashboard user={user} token={token} onLogout={handleLogout} /> : <Navigate to="/" />
+          } />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
