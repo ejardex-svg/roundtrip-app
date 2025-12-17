@@ -36,7 +36,7 @@ STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
 SUBSCRIPTION_PRICE = 4.99  # Monthly subscription for transporters
 COMMISSION_RATE = 0.10  # 10% commission on transactions
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # Create the main app without a prefix
 app = FastAPI()
