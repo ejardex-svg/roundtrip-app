@@ -146,3 +146,43 @@
 - Map loads correctly ✅
 - Autocomplete working with Nominatim ✅
 - Route calculation with OSRM ✅
+
+## Chat and Verification Implementation - 2025-12-17
+
+### Chat Features:
+- Real-time chat between client and transporter
+- Anti-external negotiation filter (blocks phone numbers, emails, social media, URLs)
+- Messages marked as filtered when blocked content detected
+- Warning shown to users when trying to share external contact
+
+### Notification System:
+- In-app notifications (bell icon in header)
+- Notification types: message, offer, verification, payment
+- Mark as read functionality
+- Unread count badge
+
+### Verification Center:
+- Identity verification (DNI, NIE, Passport, Cedula)
+- Vehicle verification (for transporters only)
+- Upload document images (base64)
+- Status tracking: pending, approved, rejected
+
+### Backend Endpoints Created:
+- POST /api/chat/messages - Send message with content filtering
+- GET /api/chat/messages/{solicitud_id} - Get chat messages
+- GET /api/chat/unread-count - Get unread message count
+- GET /api/notifications - Get notifications
+- PATCH /api/notifications/{id}/read - Mark notification read
+- PATCH /api/notifications/read-all - Mark all as read
+- POST /api/verification/identity - Submit identity verification
+- GET /api/verification/identity/status - Get identity verification status
+- POST /api/verification/vehicle - Submit vehicle verification
+- GET /api/verification/vehicle/status - Get vehicle verification status
+- GET /api/verification/all - Get all verification statuses
+- PATCH /api/users/me/profile - Update user profile
+
+### Test Results:
+- Chat message with phone number filtered: ✅
+- Notification created for receiver: ✅
+- Verification center UI: ✅
+- NotificationBell component: ✅
