@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { Truck, MapPin, Package, TrendingUp, Clock, User, LogOut, CreditCard, Crown } from 'lucide-react';
+import NotificationBell from '../components/NotificationBell';
 
 const TransporterDashboard = ({ user, token, onLogout }) => {
   const navigate = useNavigate();
