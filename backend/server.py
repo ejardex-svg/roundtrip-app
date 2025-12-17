@@ -291,6 +291,8 @@ def create_token(user_id: str) -> str:
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="No se proporcionó token de autenticación")
     try:
         token = credentials.credentials
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
@@ -303,6 +305,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         return User(**user)
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expirado")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=401, detail="Token inválido")
 
