@@ -8,7 +8,8 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Package, MapPin, Clock, TrendingUp, User, LogOut } from 'lucide-react';
+import { Plus, Package, MapPin, Clock, TrendingUp, User, LogOut, Route } from 'lucide-react';
+import LocationPicker from '../components/LocationPicker';
 
 const ClientDashboard = ({ user, token, onLogout }) => {
   const navigate = useNavigate();
