@@ -1426,11 +1426,6 @@ async def update_user_role(user_id: str, roles: List[str], admin: User = Depends
     
     return {"message": "Roles actualizados", "user_id": user_id, "roles": roles}
 
-# Health check endpoint for Kubernetes
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
-
 # Include the router in the main app
 app.include_router(api_router)
 
