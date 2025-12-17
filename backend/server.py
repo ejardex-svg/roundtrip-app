@@ -904,6 +904,330 @@ async def get_payment_history(current_user: User = Depends(get_current_user)):
     
     return payments
 
+# ============ CHAT ROUTES ============
+
+@api_router.post("/chat/messages")
+async def send_message(message_data: MessageCreate, current_user: User = Depends(get_current_user)):
+    """Send a message in a request chat (with external contact filtering)"""
+    # Get the request
+    transport_request = await db.transport_requests.find_one({"id": message_data.solicitud_id})
+    if not transport_request:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    
+    # Determine receiver (client or transporter)
+    if current_user.id == transport_request["cliente_id"]:
+        # Sender is client, find transporter from accepted offer
+        accepted_offer = await db.offers.find_one({
+            "solicitud_id": message_data.solicitud_id,
+            "estado": "aceptada"
+        })
+        if not accepted_offer:
+            raise HTTPException(status_code=400, detail="No hay oferta aceptada para esta solicitud")
+        receiver_id = accepted_offer["transportista_id"]
+    else:
+        # Sender is transporter, receiver is client
+        receiver_id = transport_request["cliente_id"]
+    
+    # Filter message for external contact info
+    filtered_content, was_blocked, block_reason = filter_external_contact(message_data.contenido)
+    
+    message_id = str(uuid.uuid4())
+    message_doc = {
+        "id": message_id,
+        "solicitud_id": message_data.solicitud_id,
+        "sender_id": current_user.id,
+        "sender_nombre": current_user.nombre,
+        "receiver_id": receiver_id,
+        "contenido": filtered_content,
+        "contenido_original": message_data.contenido if was_blocked else None,
+        "bloqueado": was_blocked,
+        "razon_bloqueo": block_reason,
+        "leido": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.messages.insert_one(message_doc)
+    
+    # Create notification for receiver
+    notification_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": receiver_id,
+        "tipo": "message",
+        "titulo": f"Nuevo mensaje de {current_user.nombre}",
+        "mensaje": filtered_content[:100] + "..." if len(filtered_content) > 100 else filtered_content,
+        "link": f"/request/{message_data.solicitud_id}",
+        "leida": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification_doc)
+    
+    response = {k: v for k, v in message_doc.items() if k != "_id"}
+    
+    if was_blocked:
+        response["warning"] = f"Se ha detectado y ocultado información de contacto externo ({block_reason}). Por favor, mantén las negociaciones dentro de la plataforma."
+    
+    return response
+
+@api_router.get("/chat/messages/{solicitud_id}")
+async def get_messages(solicitud_id: str, current_user: User = Depends(get_current_user)):
+    """Get all messages for a request"""
+    # Verify user has access to this chat
+    transport_request = await db.transport_requests.find_one({"id": solicitud_id})
+    if not transport_request:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    
+    # Check if user is involved
+    accepted_offer = await db.offers.find_one({
+        "solicitud_id": solicitud_id,
+        "estado": "aceptada"
+    })
+    
+    if current_user.id != transport_request["cliente_id"]:
+        if not accepted_offer or current_user.id != accepted_offer["transportista_id"]:
+            raise HTTPException(status_code=403, detail="No tienes acceso a este chat")
+    
+    messages = await db.messages.find(
+        {"solicitud_id": solicitud_id},
+        {"_id": 0, "contenido_original": 0}
+    ).sort("created_at", 1).to_list(500)
+    
+    # Mark messages as read
+    await db.messages.update_many(
+        {"solicitud_id": solicitud_id, "receiver_id": current_user.id, "leido": False},
+        {"$set": {"leido": True}}
+    )
+    
+    return messages
+
+@api_router.get("/chat/unread-count")
+async def get_unread_count(current_user: User = Depends(get_current_user)):
+    """Get count of unread messages"""
+    count = await db.messages.count_documents({
+        "receiver_id": current_user.id,
+        "leido": False
+    })
+    return {"unread_count": count}
+
+# ============ NOTIFICATION ROUTES ============
+
+@api_router.get("/notifications")
+async def get_notifications(current_user: User = Depends(get_current_user)):
+    """Get user notifications"""
+    notifications = await db.notifications.find(
+        {"user_id": current_user.id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return notifications
+
+@api_router.get("/notifications/unread-count")
+async def get_unread_notification_count(current_user: User = Depends(get_current_user)):
+    """Get count of unread notifications"""
+    count = await db.notifications.count_documents({
+        "user_id": current_user.id,
+        "leida": False
+    })
+    return {"unread_count": count}
+
+@api_router.patch("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, current_user: User = Depends(get_current_user)):
+    """Mark notification as read"""
+    result = await db.notifications.update_one(
+        {"id": notification_id, "user_id": current_user.id},
+        {"$set": {"leida": True}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    return {"message": "Notificación marcada como leída"}
+
+@api_router.patch("/notifications/read-all")
+async def mark_all_notifications_read(current_user: User = Depends(get_current_user)):
+    """Mark all notifications as read"""
+    await db.notifications.update_many(
+        {"user_id": current_user.id, "leida": False},
+        {"$set": {"leida": True}}
+    )
+    return {"message": "Todas las notificaciones marcadas como leídas"}
+
+# ============ VERIFICATION ROUTES ============
+
+@api_router.post("/verification/identity")
+async def submit_identity_verification(
+    tipo_documento: str,
+    numero_documento: str,
+    documento_imagen: str,
+    selfie_imagen: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Submit identity verification documents"""
+    # Check if already has pending or approved verification
+    existing = await db.identity_verifications.find_one({
+        "user_id": current_user.id,
+        "status": {"$in": ["pending", "approved"]}
+    })
+    if existing:
+        if existing["status"] == "approved":
+            raise HTTPException(status_code=400, detail="Tu identidad ya está verificada")
+        raise HTTPException(status_code=400, detail="Ya tienes una verificación pendiente")
+    
+    verification_id = str(uuid.uuid4())
+    verification_doc = {
+        "id": verification_id,
+        "user_id": current_user.id,
+        "tipo_documento": tipo_documento,
+        "numero_documento": numero_documento,
+        "documento_imagen": documento_imagen,
+        "selfie_imagen": selfie_imagen,
+        "status": "pending",
+        "admin_notes": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.identity_verifications.insert_one(verification_doc)
+    
+    # Update user verification status
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {"identity_verification_status": "pending"}}
+    )
+    
+    return {"id": verification_id, "status": "pending", "message": "Verificación enviada correctamente"}
+
+@api_router.get("/verification/identity/status")
+async def get_identity_verification_status(current_user: User = Depends(get_current_user)):
+    """Get identity verification status"""
+    verification = await db.identity_verifications.find_one(
+        {"user_id": current_user.id},
+        {"_id": 0, "documento_imagen": 0, "selfie_imagen": 0}
+    )
+    
+    if not verification:
+        return {"status": "not_submitted", "message": "No has enviado verificación de identidad"}
+    
+    return verification
+
+@api_router.post("/verification/vehicle")
+async def submit_vehicle_verification(
+    tipo_vehiculo: str,
+    marca: str,
+    modelo: str,
+    ano: int,
+    matricula: str,
+    foto_vehiculo: str,
+    foto_matricula: str,
+    permiso_circulacion: Optional[str] = None,
+    seguro_imagen: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Submit vehicle verification documents (transporters only)"""
+    if "transportista" not in current_user.roles:
+        raise HTTPException(status_code=403, detail="Solo transportistas pueden verificar vehículos")
+    
+    # Check if already has pending or approved verification for this plate
+    existing = await db.vehicle_verifications.find_one({
+        "user_id": current_user.id,
+        "matricula": matricula,
+        "status": {"$in": ["pending", "approved"]}
+    })
+    if existing:
+        if existing["status"] == "approved":
+            raise HTTPException(status_code=400, detail="Este vehículo ya está verificado")
+        raise HTTPException(status_code=400, detail="Ya tienes una verificación pendiente para este vehículo")
+    
+    verification_id = str(uuid.uuid4())
+    verification_doc = {
+        "id": verification_id,
+        "user_id": current_user.id,
+        "tipo_vehiculo": tipo_vehiculo,
+        "marca": marca,
+        "modelo": modelo,
+        "ano": ano,
+        "matricula": matricula,
+        "foto_vehiculo": foto_vehiculo,
+        "foto_matricula": foto_matricula,
+        "permiso_circulacion": permiso_circulacion,
+        "seguro_imagen": seguro_imagen,
+        "status": "pending",
+        "admin_notes": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.vehicle_verifications.insert_one(verification_doc)
+    
+    # Update user vehicle verification status
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {"vehicle_verification_status": "pending"}}
+    )
+    
+    return {"id": verification_id, "status": "pending", "message": "Verificación de vehículo enviada correctamente"}
+
+@api_router.get("/verification/vehicle/status")
+async def get_vehicle_verification_status(current_user: User = Depends(get_current_user)):
+    """Get vehicle verification status"""
+    verifications = await db.vehicle_verifications.find(
+        {"user_id": current_user.id},
+        {"_id": 0, "foto_vehiculo": 0, "foto_matricula": 0, "permiso_circulacion": 0, "seguro_imagen": 0}
+    ).to_list(10)
+    
+    if not verifications:
+        return {"status": "not_submitted", "vehicles": [], "message": "No has enviado verificación de vehículo"}
+    
+    return {"vehicles": verifications}
+
+@api_router.get("/verification/all")
+async def get_all_verification_status(current_user: User = Depends(get_current_user)):
+    """Get all verification statuses for current user"""
+    identity = await db.identity_verifications.find_one(
+        {"user_id": current_user.id},
+        {"_id": 0, "documento_imagen": 0, "selfie_imagen": 0}
+    )
+    
+    vehicles = await db.vehicle_verifications.find(
+        {"user_id": current_user.id},
+        {"_id": 0, "foto_vehiculo": 0, "foto_matricula": 0, "permiso_circulacion": 0, "seguro_imagen": 0}
+    ).to_list(10)
+    
+    return {
+        "identity": identity if identity else {"status": "not_submitted"},
+        "vehicles": vehicles,
+        "is_identity_verified": identity["status"] == "approved" if identity else False,
+        "has_verified_vehicle": any(v["status"] == "approved" for v in vehicles) if vehicles else False
+    }
+
+# ============ PROFILE UPDATE ROUTES ============
+
+@api_router.patch("/users/me/profile")
+async def update_profile(
+    nombre: Optional[str] = None,
+    telefono: Optional[str] = None,
+    foto_perfil: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Update user profile"""
+    update_data = {}
+    if nombre:
+        update_data["nombre"] = nombre
+    if telefono:
+        update_data["telefono"] = telefono
+    if foto_perfil:
+        update_data["foto_perfil"] = foto_perfil
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No hay datos para actualizar")
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": update_data}
+    )
+    
+    updated_user = await db.users.find_one({"id": current_user.id}, {"_id": 0, "hashed_password": 0})
+    return updated_user
+
 # Health check endpoint for Kubernetes
 @app.get("/health")
 async def health_check():
