@@ -401,7 +401,7 @@ async def get_requests(estado: Optional[str] = None, current_user: User = Depend
     if estado:
         query["estado"] = estado
     
-    requests = await db.transport_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    requests = await db.transport_requests.find(query, {"_id": 0}).sort("created_at", -1).limit(100).to_list(100)
     return requests
 
 @api_router.get("/requests/my-requests", response_model=List[TransportRequest])
@@ -409,7 +409,7 @@ async def get_my_requests(current_user: User = Depends(get_current_user)):
     requests = await db.transport_requests.find(
         {"cliente_id": current_user.id},
         {"_id": 0}
-    ).sort("created_at", -1).to_list(1000)
+    ).sort("created_at", -1).limit(100).to_list(100)
     return requests
 
 @api_router.get("/requests/{request_id}", response_model=TransportRequest)
