@@ -58,7 +58,11 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={
-            user ? <Navigate to={user.roles.includes('cliente') ? "/cliente" : "/transportista"} /> : <LandingPage onLogin={handleLogin} />
+            user ? (
+              user.roles.includes('admin') ? <Navigate to="/admin" /> :
+              user.roles.includes('cliente') ? <Navigate to="/cliente" /> : 
+              <Navigate to="/transportista" />
+            ) : <LandingPage onLogin={handleLogin} />
           } />
           <Route path="/cliente" element={
             user && user.roles.includes('cliente') ? <ClientDashboard user={user} token={token} onLogout={handleLogout} /> : <Navigate to="/" />
