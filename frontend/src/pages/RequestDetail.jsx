@@ -506,6 +506,15 @@ const RequestDetail = ({ user, token, onLogout }) => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Chat Section */}
+            {canChat && (
+              <Chat 
+                solicitudId={id} 
+                token={token} 
+                currentUserId={user.id} 
+              />
+            )}
           </div>
         </div>
       </div>
