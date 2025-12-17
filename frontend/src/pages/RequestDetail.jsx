@@ -208,12 +208,13 @@ const RequestDetail = ({ user, token, onLogout }) => {
   const isTransporter = user.roles.includes('transportista');
   const acceptedOffer = offers.find(o => o.estado === 'aceptada');
   const canManageStatus = isClient || (acceptedOffer && acceptedOffer.transportista_id === user.id);
+  const canChat = acceptedOffer && (isClient || acceptedOffer.transportista_id === user.id);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Button 
             data-testid="back-button"
             variant="ghost" 
@@ -223,6 +224,7 @@ const RequestDetail = ({ user, token, onLogout }) => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver
           </Button>
+          <NotificationBell token={token} />
         </div>
       </header>
 
