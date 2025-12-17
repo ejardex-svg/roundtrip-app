@@ -26,6 +26,7 @@ const ClientDashboard = ({ user, token, onLogout }) => {
     tipo_carga: '',
     precio_ofrecido: ''
   });
+  const [routeInfo, setRouteInfo] = useState(null);
 
   useEffect(() => {
     fetchRequests();
