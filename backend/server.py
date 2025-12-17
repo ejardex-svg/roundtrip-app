@@ -320,7 +320,7 @@ async def register(user_data: UserRegister):
         raise HTTPException(status_code=400, detail="El email ya está registrado")
     
     # Validate roles
-    valid_roles = ["cliente", "transportista"]
+    valid_roles = ["cliente", "transportista", "admin"]
     for role in user_data.roles:
         if role not in valid_roles:
             raise HTTPException(status_code=400, detail=f"Rol inválido: {role}")
