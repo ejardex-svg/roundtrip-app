@@ -89,6 +89,7 @@ const ClientDashboard = ({ user, token, onLogout }) => {
           tipo_carga: '',
           precio_ofrecido: ''
         });
+        setRouteInfo(null);
         fetchRequests();
         fetchStats();
       } else {
