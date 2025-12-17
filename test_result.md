@@ -127,3 +127,22 @@
 - Commission payment: ✅ Working (9$ for 90$ offer)
 - Payment history: ✅ Working
 - Payment status polling: ✅ Working
+
+## OpenStreetMap Integration - 2025-12-17
+
+### Features Implemented:
+- OpenStreetMap with Leaflet for map visualization
+- Nominatim API for address autocomplete (free, no API key required)
+- OSRM for route calculation (free routing service)
+- Real-time distance and duration estimation
+- Route visualization on map
+
+### Components:
+- LocationPicker component with autocomplete
+- Green marker for origin, red marker for destination
+- Route polyline displayed on map
+
+### Test Results:
+- Map loads correctly ✅
+- Autocomplete working with Nominatim ✅
+- Route calculation with OSRM ✅
