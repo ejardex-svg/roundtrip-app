@@ -10,6 +10,8 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { toast } from 'sonner';
 import { ArrowLeft, MapPin, Package, User, Star, MessageSquare } from 'lucide-react';
+import Chat from '../components/Chat';
+import NotificationBell from '../components/NotificationBell';
 
 const RequestDetail = ({ user, token, onLogout }) => {
   const { id } = useParams();
