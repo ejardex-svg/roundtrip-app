@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { ArrowLeft, Star, User, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, Star, User, Mail, Phone, Shield, CheckCircle } from 'lucide-react';
+import VerificationCenter from '../components/VerificationCenter';
+import NotificationBell from '../components/NotificationBell';
 
 const Profile = ({ user, token, onLogout }) => {
   const navigate = useNavigate();
   const [ratings, setRatings] = useState([]);
+  const [verificationStatus, setVerificationStatus] = useState(null);
 
   useEffect(() => {
     fetchRatings();
+    fetchVerificationStatus();
   }, []);
 
   const fetchRatings = async () => {
@@ -27,11 +31,25 @@ const Profile = ({ user, token, onLogout }) => {
     }
   };
 
+  const fetchVerificationStatus = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/verification/all`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVerificationStatus(data);
+      }
+    } catch (error) {
+      console.error('Error fetching verification:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Button 
             data-testid="back-button"
             variant="ghost" 
@@ -41,6 +59,7 @@ const Profile = ({ user, token, onLogout }) => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver
           </Button>
+          <NotificationBell token={token} />
         </div>
       </header>
 
@@ -57,7 +76,14 @@ const Profile = ({ user, token, onLogout }) => {
                   <User className="w-10 h-10 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{user.nombre}</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-gray-900">{user.nombre}</h2>
+                    {verificationStatus?.is_identity_verified && (
+                      <Badge className="bg-blue-500 text-white text-xs">
+                        <CheckCircle className="w-3 h-3 mr-1" /> Verificado
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex gap-2 mt-2">
                     {user.roles.map(role => (
                       <Badge key={role} className="bg-emerald-100 text-emerald-700 border-0">
@@ -96,6 +122,22 @@ const Profile = ({ user, token, onLogout }) => {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Verification Center */}
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-500" />
+                Centro de Verificación
+              </CardTitle>
+              <CardDescription>
+                Verifica tu identidad y vehículo para aumentar la confianza
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VerificationCenter token={token} userRoles={user.roles} />
             </CardContent>
           </Card>
 
