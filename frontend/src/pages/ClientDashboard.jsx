@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Package, MapPin, Clock, TrendingUp, User, LogOut, Route } from 'lucide-react';
 import LocationPicker from '../components/LocationPicker';
+import NotificationBell from '../components/NotificationBell';
 
 const ClientDashboard = ({ user, token, onLogout }) => {
   const navigate = useNavigate();
