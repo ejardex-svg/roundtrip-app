@@ -149,6 +149,125 @@ class PaymentTransaction(BaseModel):
     created_at: str
     updated_at: str
 
+# ============ CHAT MODELS ============
+
+class MessageCreate(BaseModel):
+    solicitud_id: str
+    contenido: str
+
+class Message(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    solicitud_id: str
+    sender_id: str
+    sender_nombre: str
+    receiver_id: str
+    contenido: str
+    contenido_original: Optional[str] = None
+    bloqueado: bool = False
+    razon_bloqueo: Optional[str] = None
+    leido: bool = False
+    created_at: str
+
+# ============ VERIFICATION MODELS ============
+
+class IdentityVerification(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    tipo_documento: str  # dni, pasaporte, etc
+    numero_documento: str
+    documento_imagen: str  # base64
+    selfie_imagen: Optional[str] = None
+    status: str  # pending, approved, rejected
+    admin_notes: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+class VehicleVerification(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    tipo_vehiculo: str  # furgoneta, camion, coche, moto
+    marca: str
+    modelo: str
+    ano: int
+    matricula: str
+    foto_vehiculo: str  # base64
+    foto_matricula: str  # base64
+    permiso_circulacion: Optional[str] = None  # base64
+    seguro_imagen: Optional[str] = None  # base64
+    status: str  # pending, approved, rejected
+    admin_notes: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+class Notification(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    tipo: str  # message, offer, verification, payment
+    titulo: str
+    mensaje: str
+    link: Optional[str] = None
+    leida: bool = False
+    created_at: str
+
+# ============ CHAT FILTER UTILITIES ============
+
+def filter_external_contact(text: str) -> tuple:
+    """
+    Filter messages to prevent sharing external contact info.
+    Returns (filtered_text, was_blocked, reason)
+    """
+    original = text
+    blocked = False
+    reasons = []
+    
+    # Phone patterns (various formats)
+    phone_patterns = [
+        r'\+?\d{1,3}[-.\s]?\(?\d{2,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}[-.\s]?\d{0,4}',
+        r'\d{9,}',
+        r'\d{3}[-.\s]\d{3}[-.\s]\d{3,4}',
+    ]
+    for pattern in phone_patterns:
+        if re.search(pattern, text):
+            text = re.sub(pattern, '[NÚMERO OCULTO]', text)
+            blocked = True
+            reasons.append('número de teléfono')
+    
+    # Email patterns
+    email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    if re.search(email_pattern, text):
+        text = re.sub(email_pattern, '[EMAIL OCULTO]', text)
+        blocked = True
+        reasons.append('email')
+    
+    # Social media patterns
+    social_patterns = [
+        (r'@[a-zA-Z0-9_]{3,}', 'usuario de red social'),
+        (r'(?:instagram|ig|insta)[\s:]*[a-zA-Z0-9._]+', 'Instagram'),
+        (r'(?:whatsapp|wsp|whats)[\s:]*[\d+]+', 'WhatsApp'),
+        (r'(?:telegram|tg)[\s:]*[a-zA-Z0-9_]+', 'Telegram'),
+        (r'(?:facebook|fb)[\s:./]*[a-zA-Z0-9.]+', 'Facebook'),
+        (r'(?:twitter|tw)[\s:./]*[a-zA-Z0-9_]+', 'Twitter'),
+    ]
+    for pattern, name in social_patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            text = re.sub(pattern, f'[{name.upper()} OCULTO]', text, flags=re.IGNORECASE)
+            blocked = True
+            reasons.append(name)
+    
+    # URL patterns
+    url_pattern = r'https?://[^\s]+'
+    if re.search(url_pattern, text):
+        text = re.sub(url_pattern, '[ENLACE OCULTO]', text)
+        blocked = True
+        reasons.append('enlace')
+    
+    reason = ', '.join(set(reasons)) if reasons else None
+    return text, blocked, reason
+
 # ============ AUTH UTILITIES ============
 
 def hash_password(password: str) -> str:
