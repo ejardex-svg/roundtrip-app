@@ -153,6 +153,7 @@ const TransporterDashboard = ({ user, token, onLogout }) => {
               )}
             </div>
             <div className="flex items-center gap-3">
+              <NotificationBell token={token} />
               <Button
                 data-testid="profile-button"
                 variant="ghost"
