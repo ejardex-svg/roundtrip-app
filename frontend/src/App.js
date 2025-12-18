@@ -100,6 +100,7 @@ function App() {
             user && user.roles.includes('admin') ? <AdminDashboard user={user} token={token} onLogout={handleLogout} /> : <Navigate to="/" />
           } />
         </Routes>
+        <InstallPWA />
       </BrowserRouter>
       <Toaster position="top-right" />
     </div>
