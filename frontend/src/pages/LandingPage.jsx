@@ -12,6 +12,8 @@ const LandingPage = ({ onLogin }) => {
   const [showAuth, setShowAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   // Register form
   const [registerData, setRegisterData] = useState({
