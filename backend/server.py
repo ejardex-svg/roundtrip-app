@@ -44,8 +44,11 @@ security = HTTPBearer(auto_error=False)
 # Create the main app without a prefix
 app = FastAPI()
 
-# Health check endpoint for Kubernetes - MUST be defined before router
+# Health check endpoints for Kubernetes - Multiple paths for compatibility
 @app.get("/health")
+@app.get("/api/health")
+@app.head("/health")
+@app.head("/api/health")
 async def health_check():
     return {"status": "healthy"}
 
