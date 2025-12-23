@@ -59,7 +59,19 @@ const Profile = ({ user, token, onLogout }) => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver
           </Button>
-          <NotificationBell token={token} />
+          <div className="flex items-center gap-3">
+            <NotificationBell token={token} />
+            <Button
+              data-testid="logout-button"
+              variant="outline"
+              size="sm"
+              onClick={onLogout}
+              className="rounded-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Cerrar Sesión
+            </Button>
+          </div>
         </div>
       </header>
 
