@@ -552,13 +552,13 @@ async def accept_offer(offer_id: str, current_user: User = Depends(get_current_u
     )
     
     # Create transaction record (simulated)
+    # Record transaction (without commission - direct payment between parties)
     transaction_doc = {
         "id": str(uuid.uuid4()),
         "solicitud_id": offer["solicitud_id"],
         "monto": offer["precio_oferta"],
-        "comision": offer["precio_oferta"] * 0.10,  # 10% commission
-        "tipo": "comision",
-        "estado": "simulado",
+        "tipo": "pago_acordado",
+        "estado": "pendiente",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.transactions.insert_one(transaction_doc)
