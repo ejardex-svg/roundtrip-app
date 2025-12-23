@@ -188,7 +188,7 @@ const TransporterDashboard = ({ user, token, onLogout }) => {
                 <Crown className="w-10 h-10" />
                 <div>
                   <h3 className="text-xl font-bold">¡Suscríbete para hacer ofertas!</h3>
-                  <p className="text-amber-100">Por solo $4.99/mes accede a todas las solicitudes de transporte</p>
+                  <p className="text-amber-100">Por solo €3,99/mes accede a todas las solicitudes de transporte</p>
                 </div>
               </div>
               <Button 
