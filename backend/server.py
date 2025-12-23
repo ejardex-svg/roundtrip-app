@@ -36,8 +36,8 @@ JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
 
 # Payment Plans
-SUBSCRIPTION_PRICE = 4.99  # Monthly subscription for transporters
-COMMISSION_RATE = 0.10  # 10% commission on transactions
+SUBSCRIPTION_PRICE = 3.99  # Monthly subscription for transporters in EUR
+SUBSCRIPTION_CURRENCY = "eur"
 
 security = HTTPBearer(auto_error=False)
 
