@@ -703,7 +703,7 @@ async def create_stripe_subscription(request_data: SubscriptionRequest, http_req
         
         checkout_request = CheckoutSessionRequest(
             amount=SUBSCRIPTION_PRICE,
-            currency="usd",
+            currency=SUBSCRIPTION_CURRENCY,
             success_url=success_url,
             cancel_url=cancel_url,
             metadata={
@@ -723,7 +723,7 @@ async def create_stripe_subscription(request_data: SubscriptionRequest, http_req
             "user_email": current_user.email,
             "session_id": session.session_id,
             "amount": SUBSCRIPTION_PRICE,
-            "currency": "usd",
+            "currency": SUBSCRIPTION_CURRENCY,
             "payment_type": "subscription",
             "payment_method": "stripe",
             "status": "pending",
