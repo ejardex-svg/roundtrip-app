@@ -6,7 +6,7 @@ import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
-import { Truck, Package, Users, Shield, TrendingUp, MapPin, RefreshCw } from 'lucide-react';
+import { Truck, Package, Users, Shield, TrendingUp, MapPin, RefreshCw, Eye, EyeOff } from 'lucide-react';
 
 const LandingPage = ({ onLogin }) => {
   const [showAuth, setShowAuth] = useState(false);
