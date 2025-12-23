@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { ArrowLeft, Star, User, Mail, Phone, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Star, User, Mail, Phone, Shield, CheckCircle, LogOut } from 'lucide-react';
 import VerificationCenter from '../components/VerificationCenter';
 import NotificationBell from '../components/NotificationBell';
 
